@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ViTacPhys: Physical Property-Aware Grasping from Human Visual-Tactile Demonstrations</title>
+<meta name="description" content="ViTacPhys conditions a robot grasping policy on predicted mass, stiffness, and friction inferred from human visual-tactile demonstrations.">
+
+<!-- Core layout + figure rendering are vendored locally (work offline / on any machine). -->
+<link rel="stylesheet" href="assets/lib/bulma.min.css">
+<!-- Icons + web fonts are cosmetic; loaded from CDN, page degrades gracefully without them. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Noto+Sans:wght@400;500;600&family=Castoro:ital@0;1&display=swap">
+
+<style>
+  :root{
+    --accent:#1f6feb;
+    --accent-soft:#e8f0ff;
+    --ink:#1f2933;
+    --muted:#5b6472;
+  }
+  html{scroll-behavior:smooth;}
+  body{font-family:'Noto Sans',sans-serif;color:var(--ink);}
+  .publication-title,.title,.subtitle,.author-block,.publication-authors{font-family:'Google Sans',sans-serif;}
+  .publication-title{letter-spacing:-.01em;}
+  .author-block a{color:var(--accent);}
+  .section{padding-top:3rem;padding-bottom:3rem;}
+  .title.is-3{margin-bottom:1.25rem;}
+  .narrow{max-width:880px;margin-left:auto;margin-right:auto;}
+  .band-light{background:#fafafa;}
+
+  /* hero / teaser video — explicit aspect-ratio reserves height (avoids the wrapper
+     collapsing to 0 around a responsive <video>, which made the next section overlap it). */
+  .teaser-section{padding-top:1.5rem;padding-bottom:2.5rem;}
+  .hero-video-wrap{box-shadow:0 8px 30px rgba(0,0,0,.18);border-radius:12px;overflow:hidden;
+                   max-width:1000px;margin:0 auto;aspect-ratio:16/10;background:#000;}
+  .hero-video{display:block;width:100%;height:100%;object-fit:contain;background:#000;}
+
+  /* pdf figures */
+  .pdf-fig{width:100%;display:block;}
+  .figure-card{background:#fff;border:1px solid #e7eaf0;border-radius:12px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);}
+  .figure-caption{color:var(--muted);font-size:.92rem;margin-top:.6rem;text-align:center;}
+  .fig-loading{color:var(--muted);font-size:.85rem;text-align:center;padding:1.2rem 0;}
+
+  /* generic video card */
+  .vcard{background:#f8f9fb;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.09);}
+  .vcard video{width:100%;display:block;background:#000;}
+  .vcard .vcap{padding:8px 10px;font-size:.92rem;font-weight:500;text-align:center;color:var(--ink);}
+
+  /* merged 3-panel column captions (ACT | ViTacFormer | Ours) */
+  .col3-cap{display:flex;justify-content:space-between;font-size:.82rem;color:#fff;font-weight:600;
+            padding:6px 4%;background:linear-gradient(90deg,#374151,#4b5563,#1f6feb);}
+  .col3-cap span{flex:1;text-align:center;}
+  .col3-cap span:last-child{color:#cfe0ff;}
+
+  /* object picker (numbered pills) */
+  .object-picker{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin:.5rem auto 1.5rem;max-width:720px;}
+  .object-picker button{min-width:2.4rem;height:2.4rem;border-radius:8px;border:1px solid #d4dae3;
+        background:#fff;color:var(--muted);font-weight:600;cursor:pointer;transition:.15s;}
+  .object-picker button:hover{border-color:var(--accent);color:var(--accent);}
+  .object-picker button.is-active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* trio comparison (ACT | ViTacFormer | Ours) */
+  .trio-head{display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:.8rem;}
+  .trio-title{font-weight:600;color:var(--ink);font-size:1.05rem;}
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .trio .vcard{margin:0;}
+  .badge{display:inline-block;font-size:.74rem;font-weight:700;padding:.15rem .55rem;border-radius:999px;}
+  .badge-base{background:#eef0f4;color:#475569;}
+  .badge-ours{background:var(--accent-soft);color:var(--accent);}
+  @media(max-width:760px){.trio{grid-template-columns:1fr;}}
+
+  /* tables */
+  .restable{font-size:.9rem;}
+  .restable th{background:#f2f5fa;}
+  .restable td.best{font-weight:700;color:var(--accent);}
+  .tnote{color:var(--muted);font-size:.85rem;margin-top:.4rem;}
+
+  .links .button{margin:.25rem;}
+  pre code{font-size:.82rem;}
+  footer .content{font-size:.9rem;}
+  .tag-key{margin:.15rem;}
+</style>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<section class="hero">
+ <div class="hero-body">
+  <div class="container is-max-desktop has-text-centered">
+   <h1 class="title is-2 publication-title">ViTacPhys</h1>
+   <h2 class="subtitle is-4" style="margin-top:-.4rem;color:var(--muted)">
+     Physical Property-Aware Grasping from Human Visual-Tactile Demonstrations
+   </h2>
+
+   <div class="is-size-5 publication-authors" style="margin-top:1rem;">
+     <span class="author-block"><a href="#">Anonymous Authors</a></span>
+   </div>
+   <div class="is-size-6 publication-authors" style="color:var(--muted);margin-top:.3rem;">
+     <span class="author-block">Under review</span>
+   </div>
+
+   <div class="links" style="margin-top:1.4rem;">
+     <span class="link-block">
+       <a href="assets/paper.pdf" class="button is-dark is-rounded" target="_blank">
+         <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
+       </a>
+     </span>
+     <span class="link-block">
+       <a href="#" class="button is-dark is-rounded">
+         <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+       </a>
+     </span>
+     <span class="link-block">
+       <a href="#" class="button is-dark is-rounded">
+         <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
+       </a>
+     </span>
+     <span class="link-block">
+       <a href="#" class="button is-dark is-rounded">
+         <span class="icon"><i class="fas fa-database"></i></span><span>H2Touch Dataset</span>
+       </a>
+     </span>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== MAIN / TEASER VIDEO ===================== -->
+<section class="section teaser-section">
+ <div class="container is-max-desktop">
+   <div class="hero-video-wrap">
+     <video class="hero-video" controls muted loop autoplay playsinline preload="metadata" poster="">
+       <source src="assets/videos/main.mp4" type="video/mp4">
+     </video>
+   </div>
+   <p class="figure-caption" style="margin-top:.9rem;">
+     Overview video. ViTacPhys infers object mass, stiffness, and friction from visual-tactile interaction and
+     uses them to condition a dexterous-hand grasping policy.
+   </p>
+ </div>
+</section>
+
+<!-- ===================== ABSTRACT ===================== -->
+<section class="section band-light">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Abstract</h2>
+  <div class="content has-text-justified narrow">
+   <p>
+    Object physical properties such as mass, stiffness, and friction directly determine how a robot should grasp,
+    support, and manipulate an object, yet they are often hidden from static visual observations and difficult to
+    estimate before contact. Humans naturally combine visual priors with dense tactile feedback during interaction
+    to infer these properties and adapt their actions. Motivated by this capability, we introduce
+    <strong>H2Touch</strong>, a human visual-tactile manipulation dataset collected with a wearable sensing system
+    that synchronizes wrist-mounted RGB observations and fingertip piezoresistive tactile maps. H2Touch covers
+    <strong>60 everyday objects from 7 categories</strong> with explicit annotations for mass, structural stiffness,
+    and static friction coefficient. Based on this dataset, we propose a temporal multimodal physical-property
+    predictor that fuses RGB frames, tactile pressure maps, visual optical flow, tactile flow, and language-derived
+    semantic priors. We further study human-to-robot transfer by adapting the predictor to a dexterous robot and
+    using its outputs as structured property tokens for an ACT-style adaptive grasping policy. Experiments show that
+    the predictor generalizes to unseen objects, transfers to robot observations with limited robot data, and
+    improves real-robot grasp success and force adaptation, especially for <strong>visually similar out-of-distribution
+    objects</strong> with different physical properties.
+   </p>
+  </div>
+  <div class="has-text-centered">
+    <span class="tag is-info is-light tag-key">Vision-tactile fusion</span>
+    <span class="tag is-info is-light tag-key">Physical property prediction</span>
+    <span class="tag is-info is-light tag-key">Adaptive grasping</span>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== METHOD ===================== -->
+<section class="section">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Method</h2>
+  <p class="content has-text-centered narrow" style="color:var(--muted);">
+    ViTacPhys has two stages: a <strong>visual-tactile property predictor</strong> and a
+    <strong>property-conditioned ACT policy</strong>.
+  </p>
+
+  <div class="figure-card" style="margin-bottom:1.6rem;">
+    <canvas class="pdf-fig" data-pdf="assets/figs/model1.pdf"></canvas>
+    <div class="fig-loading">Rendering figure…</div>
+    <p class="figure-caption">
+      <strong>Property predictor.</strong> RGB, tactile, and motion-flow streams are encoded by two-stream temporal
+      encoders (ResNet-18 + GRU) and fused with a VLM-distilled semantic prior through gated cross-attention to
+      predict mass, stiffness, and friction.
+    </p>
+  </div>
+
+  <div class="figure-card">
+    <canvas class="pdf-fig" data-pdf="assets/figs/model2.pdf"></canvas>
+    <div class="fig-loading">Rendering figure…</div>
+    <p class="figure-caption">
+      <strong>Property-conditioned ACT policy.</strong> After contact, the predicted properties are discretized into
+      voted property tokens and injected with wrist RGB and proprioception, letting the policy adapt grasp force,
+      finger closure, and anti-slip behavior.
+    </p>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== DATA ===================== -->
+<section class="section band-light">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Data Collection</h2>
+  <p class="content has-text-centered narrow" style="color:var(--muted);">
+    A wearable glove with three fingertip tactile arrays and a wrist-mounted RGB camera, synchronized with
+    motion capture at 30&nbsp;Hz, records humans grasping, lifting, and shaking everyday objects.
+  </p>
+
+  <div class="figure-card" style="margin-bottom:1.6rem;">
+    <canvas class="pdf-fig" data-pdf="assets/figs/data_collect.pdf"></canvas>
+    <div class="fig-loading">Rendering figure…</div>
+    <p class="figure-caption">
+      <strong>Acquisition setup.</strong> Wrist RGB, fingertip tactile maps, and motion-capture markers are aligned
+      to match the real robot's sensing layout. Mass, stiffness, and friction are then labeled with a precision
+      scale, force–displacement fitting, and an inclined-plane test.
+    </p>
+  </div>
+
+  <div class="figure-card" style="margin-bottom:1.6rem;">
+    <canvas class="pdf-fig" data-pdf="assets/figs/data_train.pdf"></canvas>
+    <div class="fig-loading">Rendering figure…</div>
+    <p class="figure-caption"><strong>Physical Property / Downstream Task Data.</strong></p>
+  </div>
+  <div class="figure-card">
+    <canvas class="pdf-fig" data-pdf="assets/figs/data_test.pdf"></canvas>
+    <div class="fig-loading">Rendering figure…</div>
+    <p class="figure-caption"><strong>Downstream Task Data.</strong></p>
+  </div>
+  <p class="figure-caption narrow">
+    H2Touch spans 60 everyday objects across containers, toys, fruits, sponges, and soft items with diverse mass,
+    stiffness, and surface friction.
+  </p>
+ </div>
+</section>
+
+<!-- ===================== RESULTS / TABLES ===================== -->
+<section class="section">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Experimental Results</h2>
+
+  <h3 class="title is-5">Physical-property prediction</h3>
+  <p class="content" style="color:var(--muted);">
+    The predictor estimates mass, stiffness, and friction across increasingly hard splits and remains usable after
+    human-to-robot transfer.
+  </p>
+  <div class="table-container">
+   <table class="table is-fullwidth is-striped is-hoverable restable">
+    <thead>
+      <tr>
+        <th rowspan="2">Setting</th>
+        <th colspan="2" class="has-text-centered">Mass</th>
+        <th colspan="3" class="has-text-centered">Stiffness</th>
+        <th colspan="2" class="has-text-centered">Friction</th>
+      </tr>
+      <tr>
+        <th>Acc.&uarr;</th><th>Macro-F1&uarr;</th>
+        <th>MAE&darr;</th><th>MAPE&darr;</th><th>Pearson&uarr;</th>
+        <th>Acc.&uarr;</th><th>Macro-F1&uarr;</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>In distribution</td>
+        <td class="best">0.972</td><td class="best">0.970</td>
+        <td class="best">0.248</td><td class="best">5.51</td><td class="best">0.980</td>
+        <td class="best">0.988</td><td class="best">0.984</td></tr>
+      <tr><td>Leave-one-class-out (avg.)</td>
+        <td>0.875</td><td>0.866</td>
+        <td>0.435</td><td>9.08</td><td>0.947</td>
+        <td>0.985</td><td>0.981</td></tr>
+      <tr><td>One-shot (avg.)</td>
+        <td>0.492</td><td>0.480</td>
+        <td>0.837</td><td>16.84</td><td>0.680</td>
+        <td>0.569</td><td>0.527</td></tr>
+      <tr><td>Human-to-robot transfer (LOCO)</td>
+        <td>0.812</td><td>0.805</td>
+        <td>0.485</td><td>11.25</td><td>0.915</td>
+        <td>0.965</td><td>0.960</td></tr>
+    </tbody>
+   </table>
+  </div>
+  <p class="tnote">Stiffness in N/mm; MAPE in %. Best in-distribution scores highlighted. (Paper Table II.)</p>
+
+  <h3 class="title is-5" style="margin-top:2rem;">Real-robot grasping success</h3>
+  <p class="content" style="color:var(--muted);">
+    Conditioning on predicted properties yields the highest clean-success rate and the smallest ID&rarr;OOD drop,
+    while avoiding the excessive-force grasps that ACT relies on for visually similar OOD objects.
+  </p>
+  <div class="table-container">
+   <table class="table is-fullwidth is-striped is-hoverable restable" style="max-width:640px;margin:0 auto;">
+    <thead>
+      <tr><th>Split</th><th>Method</th><th>Clean Success&uarr;</th><th>Over-force Success&darr;</th></tr>
+    </thead>
+    <tbody>
+      <tr><td rowspan="3">ID</td><td>ACT</td><td>80.0%</td><td>6.2%</td></tr>
+      <tr><td>ViTacFormer</td><td>31.8%</td><td class="best">1.5%</td></tr>
+      <tr><td><strong>Ours</strong></td><td class="best">95.8%</td><td>2.8%</td></tr>
+      <tr><td rowspan="3">OOD</td><td>ACT</td><td>38.5%</td><td>25.6%</td></tr>
+      <tr><td>ViTacFormer</td><td>23.1%</td><td>2.6%</td></tr>
+      <tr><td><strong>Ours</strong></td><td class="best">87.8%</td><td class="best">2.4%</td></tr>
+    </tbody>
+   </table>
+  </div>
+  <p class="tnote">(Paper Table III.) Over-force success = soft object lifted but visibly crushed — lower is better.</p>
+ </div>
+</section>
+
+<!-- ===================== REAL-ROBOT GRASPING GALLERY ===================== -->
+<section class="section band-light">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Real-Robot Grasping</h2>
+  <p class="content has-text-centered narrow" style="color:var(--muted);">
+    ViTacPhys grasping a range of objects with property-dependent forces.
+  </p>
+  <div class="columns is-multiline" id="single-grid"></div>
+ </div>
+</section>
+
+<!-- ===================== MERGED COMPARISON ===================== -->
+<section class="section">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Comparison with Baselines</h2>
+  <p class="content has-text-centered narrow" style="color:var(--muted);">
+    Side-by-side real-robot rollouts. Each clip shows, from left to right,
+    <strong>ACT</strong>, <strong>ViTacFormer</strong>, and <strong>Ours</strong> on the same object.
+  </p>
+  <div class="columns is-multiline" id="merged-grid"></div>
+ </div>
+</section>
+
+<!-- ===================== SEPARATE COMPARISON ===================== -->
+<section class="section band-light">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Per-Object Comparison</h2>
+  <p class="content has-text-centered narrow" style="color:var(--muted);">
+    Select an object below to compare all three methods on it side by side:
+    <strong>ACT</strong>, <strong>ViTacFormer</strong>, and <strong>Ours</strong>.
+  </p>
+  <div class="object-picker" id="object-picker"></div>
+  <div class="trio-head">
+    <span class="trio-title" id="trio-title">Object 1</span>
+    <button class="button is-small is-rounded is-link is-light" id="trio-play">
+      <span class="icon"><i class="fas fa-play"></i></span><span>Play all three</span>
+    </button>
+  </div>
+  <div class="trio" id="trio-grid"></div>
+ </div>
+</section>
+
+<!-- ===================== FAILURE CASES ===================== -->
+<section class="section">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Failure Cases</h2>
+  <p class="content has-text-centered narrow" style="color:var(--muted);">
+    Representative failures, e.g. mis-estimated properties on hard or extreme objects.
+  </p>
+  <div class="columns is-multiline" id="failure-grid"></div>
+ </div>
+</section>
+
+<!-- ===================== PLATFORM ===================== -->
+<section class="section band-light">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3 has-text-centered">Experimental Platform</h2>
+  <div class="figure-card narrow">
+    <canvas class="pdf-fig" data-pdf="assets/figs/teleoperation.pdf"></canvas>
+    <div class="fig-loading">Rendering figure…</div>
+    <p class="figure-caption">
+      A 7-DoF manipulator with a direct-drive 6-DoF dexterous hand; fingertips carry piezoresistive tactile arrays
+      matching the human glove. Demonstrations are collected by teleoperation with a Quantum Manus glove — 10 demos
+      for each of 50 objects.
+    </p>
+  </div>
+ </div>
+</section>
+
+<!-- ===================== BIBTEX ===================== -->
+<section class="section" id="bibtex">
+ <div class="container is-max-desktop">
+  <h2 class="title is-3">BibTeX</h2>
+  <pre><code>@article{vitacphys2026,
+  title   = {ViTacPhys: Physical Property-Aware Grasping from Human Visual-Tactile Demonstrations},
+  author  = {Anonymous Authors},
+  journal = {Under review},
+  year    = {2026}
+}</code></pre>
+ </div>
+</section>
+
+<footer class="footer">
+ <div class="content has-text-centered">
+   <p>
+     Website template adapted from the
+     <a href="https://github.com/eliahuhorwitz/Academic-project-page-template">Academic Project Page Template</a>.
+     Page content &copy; the authors. All videos are muted.
+   </p>
+ </div>
+</footer>
+
+<script src="assets/figs-data.js"></script>
+<script src="assets/lib/pdf.min.js"></script>
+<script>
+/* ---------- PDF figure rendering (guarded so a missing pdf.js can't blank the page) ---------- */
+function figKey(path){ return path.split('/').pop().replace('.pdf',''); }
+
+async function renderPDF(canvas){
+  const path = canvas.dataset.pdf;
+  // Prefer the inlined base64 data URI (works over file://); fall back to the file path.
+  const url = (window.FIGS && window.FIGS[figKey(path)]) || path;
+  const loadingEl = canvas.nextElementSibling &&
+                    canvas.nextElementSibling.classList.contains('fig-loading')
+                    ? canvas.nextElementSibling : null;
+  try{
+    let src;
+    if(url.startsWith('data:')){
+      const b64 = url.substring(url.indexOf(',')+1);
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+      src = {data:bytes};
+    }else{
+      src = url;
+    }
+    const pdf = await pdfjsLib.getDocument(src).promise;
+    const page = await pdf.getPage(1);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cssWidth = canvas.parentElement.clientWidth;
+    const base = page.getViewport({scale:1});
+    const scale = (cssWidth / base.width) * dpr;
+    const viewport = page.getViewport({scale});
+    const ctx = canvas.getContext('2d');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+    await page.render({canvasContext:ctx, viewport}).promise;
+    if(loadingEl) loadingEl.remove();
+  }catch(e){
+    if(loadingEl){
+      loadingEl.innerHTML = 'Could not render figure. ' +
+        '<a href="'+path+'" target="_blank">Open PDF</a>';
+    }
+    console.error('PDF render failed:', path, e);
+  }
+}
+let rtimer;
+function renderAllPDFs(){
+  if (typeof pdfjsLib === 'undefined'){
+    // pdf.js unavailable (blocked/removed by AV): show "Open PDF" links instead of blank canvases.
+    document.querySelectorAll('canvas.pdf-fig').forEach(c=>{
+      const l = c.nextElementSibling;
+      if (l && l.classList.contains('fig-loading'))
+        l.innerHTML = '<a href="'+c.dataset.pdf+'" target="_blank">Open figure (PDF)</a>';
+    });
+    return;
+  }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "assets/lib/pdf.worker.min.js";
+  document.querySelectorAll('canvas.pdf-fig').forEach(renderPDF);
+}
+window.addEventListener('load', renderAllPDFs);
+window.addEventListener('resize', ()=>{clearTimeout(rtimer); rtimer=setTimeout(renderAllPDFs,250);});
+
+/* ---------- hero video: lock wrapper to the real video aspect ratio ---------- */
+(function(){
+  const v = document.querySelector('.hero-video');
+  if(!v) return;
+  const sync = ()=>{ if(v.videoWidth && v.videoHeight)
+                       v.parentElement.style.aspectRatio = v.videoWidth+'/'+v.videoHeight; };
+  v.addEventListener('loadedmetadata', sync);
+  if(v.readyState >= 1) sync();
+})();
+
+/* ---------- helpers ---------- */
+function videoEl(src, extraAttr, opts){
+  opts = opts || {};
+  // loop on by default; pass {loop:false} so the video stops and HOLDS its last frame on end.
+  const loop = (opts.loop === false) ? '' : ' loop';
+  return '<video '+(extraAttr||'')+' muted'+loop+' playsinline controls preload="metadata">'+
+         '<source src="'+src+'" type="video/mp4"></video>';
+}
+
+/* When a non-looping clip ends, hold its last *visible* frame instead of going black.
+   Some exported clips have a trailing black frame; over http we can detect black by reading
+   pixels and step back to real content. Opened as a local file, browsers block pixel reading,
+   so we just nudge back a small margin (which also repaints a frame the browser might drop). */
+function freezeOnEnd(v){
+  v.addEventListener('ended', function(){
+    let canRead = true;
+    let back = 0.06;
+    const limit = Math.min(1.2, Math.max(0.1, (v.duration || 1) - 0.05));
+    function isBlack(){
+      try{
+        const cv = document.createElement('canvas'); cv.width = 24; cv.height = 14;
+        const x = cv.getContext('2d', {willReadFrequently:true});
+        x.drawImage(v, 0, 0, 24, 14);
+        const d = x.getImageData(0, 0, 24, 14).data;
+        let s = 0; for(let i=0;i<d.length;i+=4) s += d[i]+d[i+1]+d[i+2];
+        return s/(d.length/4)/3 < 12;
+      }catch(e){ canRead = false; return false; }   // file:// blocks reads -> use fallback
+    }
+    function onSeeked(){
+      if(canRead && isBlack() && back < limit){ back = Math.min(limit, back+0.1); v.currentTime = Math.max(0, v.duration - back); }
+      else { v.removeEventListener('seeked', onSeeked); }
+    }
+    if(isBlack()){                       // last frame is black -> scan back to content
+      v.addEventListener('seeked', onSeeked);
+      v.currentTime = Math.max(0, v.duration - back);
+    }else if(!canRead){                  // can't tell (local file) -> skip a short black tail
+      v.currentTime = Math.max(0, v.duration - 0.3);
+    }
+    // else: genuine content on the last frame -> keep it
+  });
+}
+
+/* ---------- single grasp gallery (4 per row) ---------- */
+(function(){
+  const grid = document.getElementById('single-grid');
+  let html='';
+  for(let i=1;i<=8;i++){
+    html += '<div class="column is-3-desktop is-6-tablet">'+
+              '<div class="vcard">'+ videoEl('assets/videos/single/Q'+i+'.mp4') +
+              '<div class="vcap">Grasp '+i+'</div></div></div>';
+  }
+  grid.innerHTML = html;
+})();
+
+/* ---------- merged comparison (2 per row, 3-panel labels) ---------- */
+(function(){
+  const grid = document.getElementById('merged-grid');
+  let html='';
+  for(let i=1;i<=4;i++){
+    html += '<div class="column is-6">'+
+              '<div class="vcard">'+ videoEl('assets/videos/merged/'+i+'.mp4') +
+                '<div class="col3-cap"><span>ACT</span><span>ViTacFormer</span><span>Ours</span></div>'+
+              '</div></div>';
+  }
+  grid.innerHTML = html;
+})();
+
+/* ---------- failure cases (4 in a row) ---------- */
+(function(){
+  const grid = document.getElementById('failure-grid');
+  let html='';
+  for(let i=1;i<=4;i++){
+    html += '<div class="column is-3-desktop is-6-tablet">'+
+              '<div class="vcard">'+ videoEl('assets/videos/failure/F'+i+'.mp4') +
+              '<div class="vcap">Failure '+i+'</div></div></div>';
+  }
+  grid.innerHTML = html;
+})();
+
+/* ---------- per-object comparison (pick object, show all 3 methods) ---------- */
+const SCENES = Array.from({length:22},(_,i)=>i+1);
+let currentScene = 1;
+
+// build the numbered object picker
+(function(){
+  const picker = document.getElementById('object-picker');
+  picker.innerHTML = SCENES.map(s=>
+    '<button data-scene="'+s+'"'+(s===currentScene?' class="is-active"':'')+'>'+s+'</button>').join('');
+  picker.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      currentScene = parseInt(b.dataset.scene,10);
+      picker.querySelectorAll('button').forEach(x=>x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      buildTrio();
+    });
+  });
+})();
+
+function buildTrio(){
+  const base = 'assets/videos/separate/'+currentScene+'/';
+  const cells = [
+    {src:base+'act.mp4',   cls:'badge-base', label:'ACT'},
+    {src:base+'vitac.mp4', cls:'badge-base', label:'ViTacFormer'},
+    {src:base+'ours.mp4',  cls:'badge-ours', label:'Ours'}
+  ];
+  document.getElementById('trio-title').textContent = 'Object '+currentScene;
+  document.getElementById('trio-grid').innerHTML = cells.map(c=>
+    '<div class="vcard">'+ videoEl(c.src, '', {loop:false}) +
+    '<div class="vcap"><span class="badge '+c.cls+'">'+c.label+'</span></div></div>').join('');
+  const grid = document.getElementById('trio-grid');
+  const btn = document.getElementById('trio-play');
+  btn.querySelector('i').className = 'fas fa-play';
+  grid.querySelectorAll('video').forEach(v=>{
+    freezeOnEnd(v);   // hold the last visible (non-black) frame when this clip ends
+    // when every clip has finished, reset the button to ▶ for replay
+    v.addEventListener('ended', ()=>{
+      const vids = grid.querySelectorAll('video');
+      if(![...vids].some(x=>!x.paused)) btn.querySelector('i').className = 'fas fa-play';
+    });
+  });
+}
+buildTrio();
+
+document.getElementById('trio-play').addEventListener('click',function(){
+  const vids = document.getElementById('trio-grid').querySelectorAll('video');
+  const anyPlaying = [...vids].some(v=>!v.paused);
+  vids.forEach(v=>{ if(anyPlaying){v.pause();} else {v.currentTime=0; v.play();} });
+  this.querySelector('i').className = anyPlaying ? 'fas fa-play' : 'fas fa-pause';
+});
+</script>
+</body>
+</html>

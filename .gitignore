@@ -1,0 +1,7 @@
+# internal notes (not part of the public site)
+README.md
+# OS / editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
