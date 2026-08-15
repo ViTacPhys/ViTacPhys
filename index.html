@@ -39,6 +39,8 @@
 
   /* pdf figures */
   .pdf-fig{width:100%;display:block;}
+  /* PNG figures no longer need the PDF renderer's loading placeholder. */
+  .figure-card > .pdf-fig + .fig-loading{display:none;}
   .figure-card{background:#fff;border:1px solid #e7eaf0;border-radius:12px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);}
   .figure-caption{color:var(--muted);font-size:.92rem;margin-top:.6rem;text-align:center;}
   .fig-loading{color:var(--muted);font-size:.85rem;text-align:center;padding:1.2rem 0;}
@@ -66,6 +68,11 @@
   .trio-title{font-weight:600;color:var(--ink);font-size:1.05rem;}
   .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
   .trio .vcard{margin:0;}
+  .result-line{display:flex;align-items:center;justify-content:center;gap:.35rem;margin-top:.45rem;
+               min-height:1.25rem;font-size:.84rem;font-weight:600;}
+  .result-success{color:#16803a;}
+  .result-failure{color:#b42318;}
+  .result-line .icon{height:auto;width:auto;}
   .badge{display:inline-block;font-size:.74rem;font-weight:700;padding:.15rem .55rem;border-radius:999px;}
   .badge-base{background:#eef0f4;color:#475569;}
   .badge-ours{background:var(--accent-soft);color:var(--accent);}
@@ -103,24 +110,19 @@
 
    <div class="links" style="margin-top:1.4rem;">
      <span class="link-block">
-       <a href="assets/paper.pdf" class="button is-dark is-rounded" target="_blank">
-         <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
-       </a>
-     </span>
-     <span class="link-block">
        <a href="#" class="button is-dark is-rounded">
          <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
        </a>
      </span>
      <span class="link-block">
-       <a href="#" class="button is-dark is-rounded">
-         <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
-       </a>
+       <span class="button is-dark is-rounded is-static" aria-label="Code coming soon">
+         <span class="icon"><i class="fab fa-github"></i></span><span>Code (Coming Soon)</span>
+       </span>
      </span>
      <span class="link-block">
-       <a href="#" class="button is-dark is-rounded">
-         <span class="icon"><i class="fas fa-database"></i></span><span>H2Touch Dataset</span>
-       </a>
+       <span class="button is-dark is-rounded is-static" aria-label="Dataset coming soon">
+         <span class="icon"><i class="fas fa-database"></i></span><span>Dataset (Coming Soon)</span>
+       </span>
      </span>
    </div>
   </div>
@@ -148,20 +150,19 @@
   <h2 class="title is-3 has-text-centered">Abstract</h2>
   <div class="content has-text-justified narrow">
    <p>
-    Object physical properties such as mass, stiffness, and friction directly determine how a robot should grasp,
-    support, and manipulate an object, yet they are often hidden from static visual observations and difficult to
-    estimate before contact. Humans naturally combine visual priors with dense tactile feedback during interaction
-    to infer these properties and adapt their actions. Motivated by this capability, we introduce
-    <strong>H2Touch</strong>, a human visual-tactile manipulation dataset collected with a wearable sensing system
-    that synchronizes wrist-mounted RGB observations and fingertip piezoresistive tactile maps. H2Touch covers
-    <strong>60 everyday objects from 7 categories</strong> with explicit annotations for mass, structural stiffness,
-    and static friction coefficient. Based on this dataset, we propose a temporal multimodal physical-property
-    predictor that fuses RGB frames, tactile pressure maps, visual optical flow, tactile flow, and language-derived
-    semantic priors. We further study human-to-robot transfer by adapting the predictor to a dexterous robot and
-    using its outputs as structured property tokens for an ACT-style adaptive grasping policy. Experiments show that
-    the predictor generalizes to unseen objects, transfers to robot observations with limited robot data, and
-    improves real-robot grasp success and force adaptation, especially for <strong>visually similar out-of-distribution
-    objects</strong> with different physical properties.
+    Recent vision-based action models rarely account explicitly for the physical properties needed to adapt a
+    manipulation policy. We introduce <strong>ViTacPhys</strong>, together with a visual-tactile data acquisition and
+    labeling system, to predict object mass, stiffness, and friction coefficient from human manipulation
+    demonstrations. Trained on <strong>60 rigid and deformable objects with 1,800 demonstrations</strong>, ViTacPhys combines temporal
+    visual-tactile modeling, cross-attention multimodal fusion, and semantic priors distilled from a
+    vision-language model. It reaches <strong>over 97% mass and friction accuracy</strong> with
+    <strong>below 6% stiffness relative error</strong> on seen objects, and achieves <strong>87.5% mass accuracy</strong>,
+    <strong>97.5% friction accuracy</strong>, and <strong>below 10% stiffness error</strong> on unseen objects from known
+    categories. We transfer ViTacPhys to a dexterous
+    robot with limited teleoperation data, video-generated augmentation, and matched-action human demonstrations,
+    then use its predictions online to condition an adaptive grasping policy. The resulting policy achieves over
+    <strong>over 95% total grasping success</strong> on ID objects and <strong>83% on visually similar OOD objects</strong> with different physical
+    properties, while producing forces more consistent with human teleoperation.
    </p>
   </div>
   <div class="has-text-centered">
@@ -177,22 +178,22 @@
  <div class="container is-max-desktop">
   <h2 class="title is-3 has-text-centered">Method</h2>
   <p class="content has-text-centered narrow" style="color:var(--muted);">
-    ViTacPhys has two stages: a <strong>visual-tactile property predictor</strong> and a
-    <strong>property-conditioned ACT policy</strong>.
+    ViTacPhys predicts physical properties from temporal visual-tactile observations and deploys them online as
+    structured inputs to an adaptive ACT-style grasping policy.
   </p>
 
   <div class="figure-card" style="margin-bottom:1.6rem;">
-    <canvas class="pdf-fig" data-pdf="assets/figs/model1.pdf"></canvas>
+    <img class="pdf-fig" src="assets/figs/model_final.png" alt="ViTacPhys method and human-to-robot transfer pipeline">
     <div class="fig-loading">Rendering figure…</div>
     <p class="figure-caption">
-      <strong>Property predictor.</strong> RGB, tactile, and motion-flow streams are encoded by two-stream temporal
-      encoders (ResNet-18 + GRU) and fused with a VLM-distilled semantic prior through gated cross-attention to
-      predict mass, stiffness, and friction.
+      <strong>ViTacPhys pipeline.</strong> Temporal visual-tactile observations and flow features are fused with
+      offline VLM-distilled semantic priors to predict mass, stiffness, and friction. Human-to-robot transfer uses
+      teleoperation data, matched-action human demonstrations, and visually augmented human demonstrations.
     </p>
   </div>
 
-  <div class="figure-card">
-    <canvas class="pdf-fig" data-pdf="assets/figs/model2.pdf"></canvas>
+  <div class="figure-card" hidden>
+    <img class="pdf-fig" src="assets/figs/model2.png" alt="Property-conditioned adaptive grasping policy">
     <div class="fig-loading">Rendering figure…</div>
     <p class="figure-caption">
       <strong>Property-conditioned ACT policy.</strong> After contact, the predicted properties are discretized into
@@ -206,14 +207,15 @@
 <!-- ===================== DATA ===================== -->
 <section class="section band-light">
  <div class="container is-max-desktop">
-  <h2 class="title is-3 has-text-centered">Data Collection</h2>
+  <h2 class="title is-3 has-text-centered">ViTacPhys Dataset</h2>
   <p class="content has-text-centered narrow" style="color:var(--muted);">
-    A wearable glove with three fingertip tactile arrays and a wrist-mounted RGB camera, synchronized with
-    motion capture at 30&nbsp;Hz, records humans grasping, lifting, and shaking everyday objects.
+    The dataset contains 1,800 one-second human grasping demonstrations at 30 Hz, collected from 60 representative
+    rigid and deformable objects using vertical-lift and lateral-shaking protocols.
   </p>
 
+  <h3 class="title is-5">Wearable Data Collection System</h3>
   <div class="figure-card" style="margin-bottom:1.6rem;">
-    <canvas class="pdf-fig" data-pdf="assets/figs/data_collect.pdf"></canvas>
+    <img class="pdf-fig" src="assets/figs/data_collect.png" alt="Wearable visual-tactile data collection system">
     <div class="fig-loading">Rendering figure…</div>
     <p class="figure-caption">
       <strong>Acquisition setup.</strong> Wrist RGB, fingertip tactile maps, and motion-capture markers are aligned
@@ -222,19 +224,21 @@
     </p>
   </div>
 
+  <h3 class="title is-5" style="margin-top:2rem;">Dataset Objects</h3>
   <div class="figure-card" style="margin-bottom:1.6rem;">
-    <canvas class="pdf-fig" data-pdf="assets/figs/data_train.pdf"></canvas>
+    <img class="pdf-fig" src="assets/figs/data_train.png" alt="Objects in the ViTacPhys dataset">
     <div class="fig-loading">Rendering figure…</div>
-    <p class="figure-caption"><strong>Physical Property / Downstream Task Data.</strong></p>
+    <p class="figure-caption"><strong>Everyday objects.</strong> The collection spans containers, toys, fruits,
+      sponges, and soft objects with diverse mass, stiffness, and surface friction.</p>
   </div>
   <div class="figure-card">
-    <canvas class="pdf-fig" data-pdf="assets/figs/data_test.pdf"></canvas>
+    <img class="pdf-fig" src="assets/figs/data_test.png" alt="Downstream task object data">
     <div class="fig-loading">Rendering figure…</div>
     <p class="figure-caption"><strong>Downstream Task Data.</strong></p>
   </div>
   <p class="figure-caption narrow">
-    H2Touch spans 60 everyday objects across containers, toys, fruits, sponges, and soft items with diverse mass,
-    stiffness, and surface friction.
+    Each object has 15 trials for each protocol with varied approach directions and hand postures. The dataset uses
+    wrist-mounted RGB and tactile sensors corresponding to the real robot sensing layout.
   </p>
  </div>
 </section>
@@ -246,8 +250,8 @@
 
   <h3 class="title is-5">Physical-property prediction</h3>
   <p class="content" style="color:var(--muted);">
-    The predictor estimates mass, stiffness, and friction across increasingly hard splits and remains usable after
-    human-to-robot transfer.
+    ViTacPhys is evaluated on new interactions with seen objects, held-out objects from known categories, and a
+    one-shot setting with highly limited training-object diversity.
   </p>
   <div class="table-container">
    <table class="table is-fullwidth is-striped is-hoverable restable">
@@ -269,42 +273,68 @@
         <td class="best">0.972</td><td class="best">0.970</td>
         <td class="best">0.248</td><td class="best">5.51</td><td class="best">0.980</td>
         <td class="best">0.988</td><td class="best">0.984</td></tr>
-      <tr><td>Leave-one-class-out (avg.)</td>
+      <tr><td>Held-out object</td>
         <td>0.875</td><td>0.866</td>
         <td>0.435</td><td>9.08</td><td>0.947</td>
-        <td>0.985</td><td>0.981</td></tr>
+        <td>0.975</td><td>0.971</td></tr>
       <tr><td>One-shot (avg.)</td>
         <td>0.492</td><td>0.480</td>
         <td>0.837</td><td>16.84</td><td>0.680</td>
         <td>0.569</td><td>0.527</td></tr>
-      <tr><td>Human-to-robot transfer (LOCO)</td>
-        <td>0.812</td><td>0.805</td>
-        <td>0.485</td><td>11.25</td><td>0.915</td>
-        <td>0.965</td><td>0.960</td></tr>
     </tbody>
    </table>
   </div>
   <p class="tnote">Stiffness in N/mm; MAPE in %. Best in-distribution scores highlighted. (Paper Table II.)</p>
 
-  <h3 class="title is-5" style="margin-top:2rem;">Real-robot grasping success</h3>
+  <h3 class="title is-5" style="margin-top:2rem;">Human-to-Robot Transfer</h3>
   <p class="content" style="color:var(--muted);">
-    Conditioning on predicted properties yields the highest clean-success rate and the smallest ID&rarr;OOD drop,
-    while avoiding the excessive-force grasps that ACT relies on for visually similar OOD objects.
+    We initialize ViTacPhys from the human in-distribution model and fine-tune it with robot teleoperation data
+    (Tele.), visually augmented dexterous-hand demonstrations (Aug.), and matched-action human demonstrations (H).
+    The strongest OOD transfer uses all three data sources.
   </p>
   <div class="table-container">
-   <table class="table is-fullwidth is-striped is-hoverable restable" style="max-width:640px;margin:0 auto;">
+   <table class="table is-fullwidth is-striped is-hoverable restable">
     <thead>
-      <tr><th>Split</th><th>Method</th><th>Clean Success&uarr;</th><th>Over-force Success&darr;</th></tr>
+      <tr>
+        <th rowspan="2">Split</th><th rowspan="2">Initialization</th><th rowspan="2">Training data</th>
+        <th colspan="2" class="has-text-centered">Mass</th>
+        <th colspan="2" class="has-text-centered">Stiffness</th>
+        <th colspan="2" class="has-text-centered">Friction</th>
+      </tr>
+      <tr>
+        <th>Acc.&uarr;</th><th>Macro-F1&uarr;</th>
+        <th>MAE&darr;</th><th>MAPE&darr;</th>
+        <th>Acc.&uarr;</th><th>Macro-F1&uarr;</th>
+      </tr>
     </thead>
     <tbody>
-      <tr><td rowspan="3">ID</td><td>ACT</td><td>80.0%</td><td>6.2%</td></tr>
-      <tr><td>ViTacFormer</td><td>31.8%</td><td class="best">1.5%</td></tr>
-      <tr><td><strong>Ours</strong></td><td class="best">95.8%</td><td>2.8%</td></tr>
-      <tr><td rowspan="3">OOD</td><td>ACT</td><td>38.5%</td><td>25.6%</td></tr>
-      <tr><td>ViTacFormer</td><td>23.1%</td><td>2.6%</td></tr>
-      <tr><td><strong>Ours</strong></td><td class="best">87.8%</td><td class="best">2.4%</td></tr>
+      <tr><td rowspan="6">ID</td><td rowspan="2">Scratch</td><td>Tele.</td><td>0.998</td><td>0.996</td><td>0.217</td><td>5.10</td><td>1.000</td><td>1.000</td></tr>
+      <tr><td>Tele.+Aug.+H</td><td>0.960</td><td>0.966</td><td>0.315</td><td>6.78</td><td>0.965</td><td>0.973</td></tr>
+      <tr><td rowspan="4">Fine-tuned</td><td>Tele.</td><td>0.907</td><td>0.912</td><td>0.201</td><td>4.66</td><td>0.949</td><td>0.960</td></tr>
+      <tr><td>Tele.+H</td><td>0.926</td><td>0.927</td><td class="best">0.164</td><td class="best">3.66</td><td class="best">0.986</td><td class="best">0.989</td></tr>
+      <tr><td>Tele.+Aug.</td><td>0.922</td><td>0.908</td><td>0.171</td><td>3.97</td><td>0.950</td><td>0.962</td></tr>
+      <tr><td>Tele.+Aug.+H</td><td>0.910</td><td>0.917</td><td>0.203</td><td>4.34</td><td>0.962</td><td>0.971</td></tr>
+      <tr><td rowspan="6">OOD</td><td rowspan="2">Scratch</td><td>Tele.</td><td>0.445</td><td>0.340</td><td>1.268</td><td>35.90</td><td>0.587</td><td>0.443</td></tr>
+      <tr><td>Tele.+Aug.+H</td><td>0.412</td><td>0.454</td><td>1.596</td><td>42.45</td><td>0.687</td><td>0.639</td></tr>
+      <tr><td rowspan="4">Fine-tuned</td><td>Tele.</td><td>0.544</td><td>0.511</td><td>0.781</td><td>20.29</td><td>0.756</td><td>0.722</td></tr>
+      <tr><td>Tele.+H</td><td>0.609</td><td>0.656</td><td>0.850</td><td>21.07</td><td>0.654</td><td>0.647</td></tr>
+      <tr><td>Tele.+Aug.</td><td>0.639</td><td>0.660</td><td>0.837</td><td>21.54</td><td>0.693</td><td>0.650</td></tr>
+      <tr><td><strong>Tele.+Aug.+H</strong></td><td class="best">0.780</td><td class="best">0.752</td><td class="best">0.766</td><td class="best">19.01</td><td class="best">0.827</td><td class="best">0.822</td></tr>
     </tbody>
    </table>
+  </div>
+  <p class="tnote">Stiffness MAE is in N/mm and MAPE is in %. Tele. = robot teleoperation, Aug. = augmented
+    dexterous-hand demonstrations, H = matched-action human demonstrations. (Paper Table VII.)</p>
+
+  <h3 class="title is-5" style="margin-top:2rem;">Real-robot grasping success</h3>
+  <p class="content" style="color:var(--muted);">
+    Conditioning the policy on ViTacPhys predictions improves clean and total success, particularly on visually
+    similar OOD objects with different physical properties, while reducing excessive-force grasps.
+  </p>
+  <div class="figure-card narrow" style="margin-top:1.5rem;">
+    <img class="pdf-fig" src="assets/figs/grasp_success_stacked.png" alt="Real-robot adaptive grasping success rates on ID and OOD objects">
+    <p class="figure-caption"><strong>Adaptive grasping success.</strong> GT Properties uses ground-truth physical
+      properties; ViTacPhys Pred. uses properties predicted online by ViTacPhys.</p>
   </div>
   <p class="tnote">(Paper Table III.) Over-force success = soft object lifted but visibly crushed — lower is better.</p>
  </div>
@@ -368,7 +398,7 @@
  <div class="container is-max-desktop">
   <h2 class="title is-3 has-text-centered">Experimental Platform</h2>
   <div class="figure-card narrow">
-    <canvas class="pdf-fig" data-pdf="assets/figs/teleoperation.pdf"></canvas>
+    <img class="pdf-fig" src="assets/figs/teleoperation.png" alt="Dexterous robot teleoperation platform">
     <div class="fig-loading">Rendering figure…</div>
     <p class="figure-caption">
       A 7-DoF manipulator with a direct-drive 6-DoF dexterous hand; fingertips carry piezoresistive tactile arrays
@@ -555,7 +585,30 @@ function freezeOnEnd(v){
 })();
 
 /* ---------- per-object comparison (pick object, show all 3 methods) ---------- */
-const SCENES = Array.from({length:22},(_,i)=>i+1);
+const SCENES = Array.from({length:21},(_,i)=>i+1);
+const OUTCOMES = {
+  1:  ['Pressed', 'Dropped', null],
+  2:  [null, 'Dropped', null],
+  3:  ['Dropped', 'Dropped', null],
+  4:  ['Dropped', 'Dropped', null],
+  5:  [null, null, null],
+  6:  ['Pressed', null, null],
+  7:  [null, 'Dropped', 'Dropped'],
+  8:  ['Pressed', null, null],
+  9:  ['Dropped', 'Dropped', null],
+  10: ['Slipped', 'Dropped', null],
+  11: ['Pressed', null, null],
+  12: ['Pressed', 'Dropped', null],
+  13: [null, 'Dropped', null],
+  14: ['Pressed', 'Dropped', null],
+  15: ['Pressed', 'Dropped', null],
+  16: ['Pressed', null, null],
+  17: [null, 'Slipped', null],
+  18: ['Pressed', 'Dropped', null],
+  19: [null, 'Dropped', null],
+  20: ['Pressed', null, null],
+  21: ['Pressed', 'Dropped', null]
+};
 let currentScene = 1;
 
 // build the numbered object picker
@@ -574,16 +627,18 @@ let currentScene = 1;
 })();
 
 function buildTrio(){
-  const base = 'assets/videos/separate/'+currentScene+'/';
+  const sourceScene = currentScene >= 5 ? currentScene + 1 : currentScene;
+  const base = 'assets/videos/separate/'+sourceScene+'/';
+  const outcomes = OUTCOMES[currentScene];
   const cells = [
-    {src:base+'act.mp4',   cls:'badge-base', label:'ACT'},
-    {src:base+'vitac.mp4', cls:'badge-base', label:'ViTacFormer'},
-    {src:base+'ours.mp4',  cls:'badge-ours', label:'Ours'}
+    {src:base+'act.mp4',   cls:'badge-base', label:'ACT', result:outcomes[0]},
+    {src:base+'vitac.mp4', cls:'badge-base', label:'ViTacFormer', result:outcomes[1]},
+    {src:base+'ours.mp4',  cls:'badge-ours', label:'Ours', result:outcomes[2]}
   ];
   document.getElementById('trio-title').textContent = 'Object '+currentScene;
   document.getElementById('trio-grid').innerHTML = cells.map(c=>
     '<div class="vcard">'+ videoEl(c.src, '', {loop:false}) +
-    '<div class="vcap"><span class="badge '+c.cls+'">'+c.label+'</span></div></div>').join('');
+    '<div class="vcap"><span class="badge '+c.cls+'">'+c.label+'</span>'+outcomeEl(c.result)+'</div></div>').join('');
   const grid = document.getElementById('trio-grid');
   const btn = document.getElementById('trio-play');
   btn.querySelector('i').className = 'fas fa-play';
@@ -596,6 +651,15 @@ function buildTrio(){
     });
   });
 }
+
+function outcomeEl(reason){
+  if(reason){
+    return '<div class="result-line result-failure"><span class="icon"><i class="fas fa-xmark"></i></span>' +
+      '<span>Failure: '+reason+'</span></div>';
+  }
+  return '<div class="result-line result-success"><span class="icon"><i class="fas fa-check"></i></span>' +
+    '<span>Success</span></div>';
+}
 buildTrio();
 
 document.getElementById('trio-play').addEventListener('click',function(){
@@ -604,6 +668,12 @@ document.getElementById('trio-play').addEventListener('click',function(){
   vids.forEach(v=>{ if(anyPlaying){v.pause();} else {v.currentTime=0; v.play();} });
   this.querySelector('i').className = anyPlaying ? 'fas fa-play' : 'fas fa-pause';
 });
+
+const platformCaption = document.querySelector('img[src="assets/figs/teleoperation.png"]')
+  ?.parentElement.querySelector('.figure-caption');
+if(platformCaption){
+  platformCaption.textContent = 'A 7-DoF manipulator with a linkage-driven 6-DoF dexterous hand uses the same visual and tactile sensor configuration as the human acquisition system. A Quantum Manus glove collects teleoperation demonstrations; the downstream evaluation uses 40 ID objects and six OOD pairs with similar appearance but different physical properties.';
+}
 </script>
 </body>
 </html>
