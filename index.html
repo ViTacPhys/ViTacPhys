@@ -110,8 +110,9 @@
 
    <div class="links" style="margin-top:1.4rem;">
      <span class="link-block">
-       <a href="#" class="button is-dark is-rounded">
-         <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+       <a href="assets/ViTacPhys_%20Physical%20Property-Aware%20Grasping%20from%20Human-Visual-Tactile%20Demonstrations_supplementary.pdf"
+          class="button is-dark is-rounded" target="_blank" rel="noopener">
+         <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Supplementary Materials</span>
        </a>
      </span>
      <span class="link-block">
@@ -150,19 +151,21 @@
   <h2 class="title is-3 has-text-centered">Abstract</h2>
   <div class="content has-text-justified narrow">
    <p>
-    Recent vision-based action models rarely account explicitly for the physical properties needed to adapt a
-    manipulation policy. We introduce <strong>ViTacPhys</strong>, together with a visual-tactile data acquisition and
-    labeling system, to predict object mass, stiffness, and friction coefficient from human manipulation
-    demonstrations. Trained on <strong>60 rigid and deformable objects with 1,800 demonstrations</strong>, ViTacPhys combines temporal
-    visual-tactile modeling, cross-attention multimodal fusion, and semantic priors distilled from a
-    vision-language model. It reaches <strong>over 97% mass and friction accuracy</strong> with
-    <strong>below 6% stiffness relative error</strong> on seen objects, and achieves <strong>87.5% mass accuracy</strong>,
-    <strong>97.5% friction accuracy</strong>, and <strong>below 10% stiffness error</strong> on unseen objects from known
-    categories. We transfer ViTacPhys to a dexterous
-    robot with limited teleoperation data, video-generated augmentation, and matched-action human demonstrations,
-    then use its predictions online to condition an adaptive grasping policy. The resulting policy achieves over
-    <strong>over 95% total grasping success</strong> on ID objects and <strong>83% on visually similar OOD objects</strong> with different physical
-    properties, while producing forces more consistent with human teleoperation.
+    Recent vision-based action models show strong capabilities in complex manipulation, but they rarely use explicit
+    object physical properties to adapt manipulation policies. We introduce <strong>ViTacPhys</strong>, a
+    visual&ndash;tactile framework and data acquisition system for predicting object mass, stiffness, and
+    friction-coefficient class from human manipulation demonstrations. Trained on data from 60 rigid and deformable
+    objects, ViTacPhys combines temporal visual&ndash;tactile modeling, cross-attention-based multimodal fusion, and a
+    semantic prior derived from a vision-language model (VLM). In the seen-object setting, it achieves 97.2% mass
+    accuracy, 98.8% friction-coefficient accuracy, and 5.51% stiffness mean absolute percentage error (MAPE). On
+    held-out objects from known categories, it achieves 87.5% mass accuracy, 97.5% friction-coefficient accuracy, and
+    9.08% stiffness MAPE. We transfer ViTacPhys from the human to the robot domain using limited teleoperation data,
+    robot-style video augmentation, and matched-action human demonstrations, and deploy it as an online module for
+    adaptive grasping. The resulting physical-property-conditioned policy achieves clean grasping success rates of
+    92.5% on in-distribution (ID) objects and 77.8% on out-of-distribution (OOD) objects, with total success rates of
+    95.0% and 83.4%, respectively. On the common OOD objects successfully grasped by both methods, its force profile is
+    more consistent with human teleoperation than that of ACT. These results provide a system-level feasibility study
+    of explicit physical-property estimates for real-world adaptive grasping.
    </p>
   </div>
   <div class="has-text-centered">
